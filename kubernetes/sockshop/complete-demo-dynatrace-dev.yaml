@@ -566,6 +566,7 @@ metadata:
   name: front-end
   labels:
     app: front-end
+    version: "{{ .Values.frontend_version }}"
   namespace: sock-shop-dev
 spec:
   ports:
@@ -574,6 +575,7 @@ spec:
     targetPort: 8080
   selector:
     app: front-end
+    version: "{{ .Values.frontend_version }}"
   type: LoadBalancer
 ---
 apiVersion: extensions/v1beta1
