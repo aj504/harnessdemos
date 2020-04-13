@@ -525,13 +525,13 @@ spec:
         app: front-end
         stage: dev
         release: stable
-        version: "{{ .Values.frontend-version }}"
+        version: "{{ .Values.frontend_version }}"
         tier: "frontend"
         product: "sockshop"
     spec:
       containers:
       - name: front-end
-        image: hdacr.azurecr.io/frontend-{{ .Values.frontend-version }}:latest
+        image: hdacr.azurecr.io/frontend-{{ .Values.frontend_version }}:latest
         resources:
           limits:
             cpu: 300m
