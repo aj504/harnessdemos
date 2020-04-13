@@ -1,0 +1,13 @@
+# List of default values. These params can be overriden at the commandline
+---
+aks_cluster_name: harnessdemoprod
+aks_dns_prefix_name: aksprod
+aks_kubernetes_version: 1.15.7
+aks_env: Prod
+region: eastus
+vm_size: Standard_D2_v2
+aks_vm_count: 3
+active_subscription: 8435dcb8-549e-416d-828a-55cc002676d9
+rg_name: Harness_Sandbox
+
+admin_username: aksadmin

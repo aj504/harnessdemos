@@ -1,0 +1,79 @@
+- name: Create AKS Cluster
+  hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars/aks_vars.yml
+  pre_tasks:
+
+  - name: Login To Azure And Set Active Subscription
+    block:
+        - name: Login
+          command: |
+              az login --service-principal --username {{ client_id }} --password {{ client_secret }} --tenant {{ tenant_id }}
+
+        - name: Set Active Subscription
+          command: |
+              az account set -s {{ active_subscription }}
+  tasks:
+
+    - set_fact:
+        keyfile_name: "{{ admin_username }}{{ ansible_date_time.iso8601 }}"
+
+    - name: Create Temp Directory to Store SSH Key
+      tempfile:
+        state: directory
+      register: tempdir
+      changed_when: false
+
+    - name: Generate SSH keys for Admin User
+      command: ssh-keygen -b 2048 -t rsa -f {{ tempdir.path }}/{{ keyfile_name }} -q -N ""
+
+    - set_fact:
+        admin_user_ssh_public_key: "{{ lookup('file', tempdir.path + '/' + keyfile_name + '.pub') }}"
+
+    - name: Create a managed Azure Container Services (AKS) instance
+      azure_rm_aks:
+        name: "{{ aks_cluster_name }}"
+        location: "{{ region }}"
+        resource_group: "{{ rg_name }}"
+        dns_prefix: "{{ aks_dns_prefix_name }}"
+        kubernetes_version: "{{ aks_kubernetes_version }}"
+        linux_profile:
+          admin_username: "{{ admin_username }}"
+          ssh_key: "{{ admin_user_ssh_public_key }}"
+        service_principal:
+          client_id: "{{ client_id }}"
+          client_secret: "{{ client_secret }}"
+        agent_pool_profiles:
+          - name: default
+            count: "{{ aks_vm_count }}"
+            vm_size: "{{ vm_size }}"
+        tags:
+          Environment: "{{ aks_env }}"
+
+    - name: Copy SSH Key to local .ssh directory
+      copy:
+        src: "{{ tempdir.path }}/{{ keyfile_name }}"
+        dest: "~/.ssh/{{ keyfile_name }}"
+        mode: 600
+        backup: yes
+
+    - name: Manually set permissions of key file
+      command: chmod 600 "~/.ssh/{{ keyfile_name }}"
+
+    - name: Delete temporary directory
+      file:
+        path: "{{ tempdir.path }}"
+        state: absent
+      changed_when: false
+
+    - name: Create an azure container registry
+      azure_rm_containerregistry:
+        name: "{{ aks_cluster_name }}-acr"
+        location: "{{ region }}"
+        resource_group: "{{ rg_name }}"
+        admin_user_enabled: true
+        sku: Standard
+
+    - name: Configure ACR with AKS Cluster
+      command: az aks update -n "{{ aks_cluster_name }}" -g "{{ rg_name }}" --attach-acr "{{ acr_name }}"

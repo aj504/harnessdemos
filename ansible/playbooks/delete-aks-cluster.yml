@@ -1,0 +1,29 @@
+- name: Delete AKS Cluster
+  hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars/aks_vars.yml
+  pre_tasks:
+
+  - name: Login To Azure And Set Active Subscription
+    block:
+        - name: Login
+          command: |
+              az login --service-principal --username {{ client_id }} --password {{ client_secret }} --tenant {{ tenant_id }}
+
+        - name: Set Active Subscription
+          command: |
+              az account set -s {{ active_subscription }}
+  tasks:
+
+    - name: Remove a managed Azure Container Services (AKS) instance
+      azure_rm_aks:
+        name: "{{ aks_cluster_name }}"
+        resource_group: "{{ rg_name }}"
+        state: absent
+
+    - name: Remove an azure container registry
+      azure_rm_containerregistry:
+        name: "{{ aks_cluster_name }}"
+        resource_group: "{{ rg_name }}"
+        state: absent

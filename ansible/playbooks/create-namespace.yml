@@ -1,0 +1,29 @@
+- name: Delete AKS Cluster
+  hosts: localhost
+  connection: local
+  vars_files:
+    - ../vars/aks_vars.yml
+  pre_tasks:
+
+  - name: Login To Azure And Set Active Subscription
+    block:
+        - name: Login
+          command: |
+              az login --service-principal --username {{ client_id }} --password {{ client_secret }} --tenant {{ tenant_id }}
+
+        - name: Set Active Subscription
+          command: |
+              az account set -s {{ active_subscription }}
+  tasks:
+
+    - name: Get Kubeconfig of AKS cluster
+      command: |
+        az aks get-credentials --resource-group "{{ rg_name }}" --name "{{ aks_cluster_name }}"
+
+    - name: Change Kubectl context
+      command: |
+        kubectl config use-context "{{ aks_cluster_name }}"
+
+    - name: Create namespace
+      command: |
+        kubectl create namespace "{{ demo_app_namespace }}"
