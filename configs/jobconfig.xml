@@ -36,15 +36,17 @@
     stages{
         stage(&apos;Checkout code&apos;){
             steps{
-                git &apos;https://github.com/dynatrace-sockshop/front-end.git&apos;
+                git &apos;https://github.com/aj504/harnessdemo.git&apos;
             }
         }
         stage(&apos;Build Code&apos;) {
             steps{
                 container(&apos;nodejs&apos;){
                     echo &apos;Code Building...&apos;
-                    script {
-                        sh &apos;npm install&apos;
+                    dir(&apos;front-end&apos;){
+                      script {
+                          sh &apos;npm install&apos;
+                        }
                     }
                     //sleep 20
                 }
@@ -54,8 +56,10 @@
             steps{
                 container(&apos;docker&apos;){
                     echo &apos;Image Building...&apos;
-                    script{
-                        sh &quot;docker build -t hdacr.azurecr.io/frontend-${params.Version} .&quot;
+                    dir(&apos;front-end&apos;){
+                      script{
+                          sh &quot;docker build -t hdacr.azurecr.io/frontend-${params.Version} .&quot;
+                        }
                     }
                     //sleep 20
                 }

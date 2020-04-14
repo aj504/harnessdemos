@@ -24,6 +24,6 @@
 
     - name: Remove an azure container registry
       azure_rm_containerregistry:
-        name: "{{ aks_cluster_name }}"
+        name: "{{ acr_name }}"
         resource_group: "{{ rg_name }}"
         state: absent
